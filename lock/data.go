@@ -1,6 +1,6 @@
 package lock;
 
-import "utils/pool";
+import "github.com/tannhauser9000/utils/pool";
 
 type Lock struct {
   lock *pool.IndexPool;
