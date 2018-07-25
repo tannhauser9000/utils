@@ -3,7 +3,7 @@
  */
 package monocnt
 
-import "github.com/tannhauser9000/utils/pool"
+import "github.com/tannhauser9000/utils/lock"
 
 // types
 const type8 = "uint8"
