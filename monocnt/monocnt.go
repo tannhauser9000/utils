@@ -31,6 +31,7 @@ func InitCount(cntType string) *CntSt {
 func (c *CntSt) Get() uint {
 	(*c).lock.Lock()
 	this := (*c).cnt
+	(*c).cnt++
 	(*c).lock.Unlock()
 	if (*c).cnt_type == type8 {
 		return uint(uint8(this))
