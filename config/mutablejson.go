@@ -7,6 +7,7 @@ import "encoding/json"
 import "fmt"
 import "os"
 import "reflect"
+import "github.com/tannhauser9000/utils/lock"
 
 // constant error
 const ErrNotFound = Error("Target config not found")
@@ -85,20 +86,26 @@ type uint64Conf struct {
 
 // actual configuration instance
 type MutableConfSt struct {
-	b    map[string]*boolConf    // map for boolean value
-	f32  map[string]*float32Conf // map for float64 value
-	f64  map[string]*float64Conf // map for float64 value
-	i    map[string]*intConf     // map for int value
-	i8   map[string]*int8Conf    // map for int8 value
-	i16  map[string]*int16Conf   // map for int16 value
-	i32  map[string]*int32Conf   // map for int32 value
-	i64  map[string]*int64Conf   // map for int64 value
-	s    map[string]*stringConf  // map for string value
-	ui   map[string]*uintConf    // map for uint value
-	ui8  map[string]*uint8Conf   // map for uint8 value
-	ui16 map[string]*uint16Conf  // map for uint16 value
-	ui32 map[string]*uint32Conf  // map for uint32 value
-	ui64 map[string]*uint64Conf  // map for uint64 value
+	reload  string                  // a random string to check if we should reload the config
+	prefix  string                  // prefix for environment variable
+	sleep   int                     // update routine sleep second
+	routine *routineSt              // routine structure for updating env
+	lock    *lock.RWLock            // conf lock
+	init    bool                    // is initialzed?
+	b       map[string]*boolConf    // map for boolean value
+	f32     map[string]*float32Conf // map for float64 value
+	f64     map[string]*float64Conf // map for float64 value
+	i       map[string]*intConf     // map for int value
+	i8      map[string]*int8Conf    // map for int8 value
+	i16     map[string]*int16Conf   // map for int16 value
+	i32     map[string]*int32Conf   // map for int32 value
+	i64     map[string]*int64Conf   // map for int64 value
+	s       map[string]*stringConf  // map for string value
+	ui      map[string]*uintConf    // map for uint value
+	ui8     map[string]*uint8Conf   // map for uint8 value
+	ui16    map[string]*uint16Conf  // map for uint16 value
+	ui32    map[string]*uint32Conf  // map for uint32 value
+	ui64    map[string]*uint64Conf  // map for uint64 value
 }
 
 // initiate configuration
@@ -133,7 +140,10 @@ func InitJSONMutableConf(path string, conf interface{}, mute *map[string]bool) (
 		ui32: make(map[string]*uint32Conf),  // map for uint32 value
 		ui64: make(map[string]*uint64Conf),  // map for uint64 value
 	}
+	(*st).lock, _ = lock.GetRWLock()
 	mutable, ok := false, false
+	(*st).lock.Lock()
+	defer (*st).lock.Unlock()
 	for i := 0; i < v.NumField(); i++ {
 		assign = false
 		mutable, ok = (*mute)[t.Field(i).Name]
@@ -240,11 +250,22 @@ func InitJSONMutableConf(path string, conf interface{}, mute *map[string]bool) (
 			return nil, ErrNotSupport
 		}
 	}
+	(*st).init = true
 	return st, nil
+}
+
+// is conf initialized?
+func (m *MutableConfSt) Init() bool {
+	return (*m).init
 }
 
 // get configuration item
 func (m *MutableConfSt) GetBool(name string) *bool {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).b[name]
 	if !ok {
 		return nil
@@ -254,6 +275,11 @@ func (m *MutableConfSt) GetBool(name string) *bool {
 }
 
 func (m *MutableConfSt) GetFloat32(name string) *float32 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).f32[name]
 	if !ok {
 		return nil
@@ -263,6 +289,11 @@ func (m *MutableConfSt) GetFloat32(name string) *float32 {
 }
 
 func (m *MutableConfSt) GetFloat64(name string) *float64 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).f64[name]
 	if !ok {
 		return nil
@@ -272,6 +303,11 @@ func (m *MutableConfSt) GetFloat64(name string) *float64 {
 }
 
 func (m *MutableConfSt) GetInt(name string) *int {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).i[name]
 	if !ok {
 		return nil
@@ -281,6 +317,11 @@ func (m *MutableConfSt) GetInt(name string) *int {
 }
 
 func (m *MutableConfSt) GetInt8(name string) *int8 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).i8[name]
 	if !ok {
 		return nil
@@ -290,6 +331,11 @@ func (m *MutableConfSt) GetInt8(name string) *int8 {
 }
 
 func (m *MutableConfSt) GetInt16(name string) *int16 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).i16[name]
 	if !ok {
 		return nil
@@ -299,6 +345,11 @@ func (m *MutableConfSt) GetInt16(name string) *int16 {
 }
 
 func (m *MutableConfSt) GetInt32(name string) *int32 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).i32[name]
 	if !ok {
 		return nil
@@ -308,6 +359,11 @@ func (m *MutableConfSt) GetInt32(name string) *int32 {
 }
 
 func (m *MutableConfSt) GetInt64(name string) *int64 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).i64[name]
 	if !ok {
 		return nil
@@ -317,6 +373,11 @@ func (m *MutableConfSt) GetInt64(name string) *int64 {
 }
 
 func (m *MutableConfSt) GetString(name string) *string {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).s[name]
 	if !ok {
 		return nil
@@ -326,6 +387,11 @@ func (m *MutableConfSt) GetString(name string) *string {
 }
 
 func (m *MutableConfSt) GetUint(name string) *uint {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).ui[name]
 	if !ok {
 		return nil
@@ -335,6 +401,11 @@ func (m *MutableConfSt) GetUint(name string) *uint {
 }
 
 func (m *MutableConfSt) GetUint8(name string) *uint8 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).ui8[name]
 	if !ok {
 		return nil
@@ -344,6 +415,11 @@ func (m *MutableConfSt) GetUint8(name string) *uint8 {
 }
 
 func (m *MutableConfSt) GetUint16(name string) *uint16 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).ui16[name]
 	if !ok {
 		return nil
@@ -353,6 +429,11 @@ func (m *MutableConfSt) GetUint16(name string) *uint16 {
 }
 
 func (m *MutableConfSt) GetUint32(name string) *uint32 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).ui32[name]
 	if !ok {
 		return nil
@@ -362,6 +443,11 @@ func (m *MutableConfSt) GetUint32(name string) *uint32 {
 }
 
 func (m *MutableConfSt) GetUint64(name string) *uint64 {
+	if !(*m).init {
+		return nil
+	}
+	(*m).lock.RLock()
+	defer (*m).lock.RUnlock()
 	this, ok := (*m).ui64[name]
 	if !ok {
 		return nil
@@ -372,6 +458,9 @@ func (m *MutableConfSt) GetUint64(name string) *uint64 {
 
 // set mutable configurations, if immutable or not found, return false
 func (m *MutableConfSt) SetBool(name string, value bool) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).b[name]
 	if !ok {
 		return false
@@ -383,6 +472,9 @@ func (m *MutableConfSt) SetBool(name string, value bool) bool {
 }
 
 func (m *MutableConfSt) SetFloat32(name string, value float32) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).f32[name]
 	if !ok {
 		return false
@@ -394,6 +486,9 @@ func (m *MutableConfSt) SetFloat32(name string, value float32) bool {
 }
 
 func (m *MutableConfSt) SetFloat64(name string, value float64) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).f64[name]
 	if !ok {
 		return false
@@ -405,6 +500,9 @@ func (m *MutableConfSt) SetFloat64(name string, value float64) bool {
 }
 
 func (m *MutableConfSt) SetInt(name string, value int) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).i[name]
 	if !ok {
 		return false
@@ -416,6 +514,9 @@ func (m *MutableConfSt) SetInt(name string, value int) bool {
 }
 
 func (m *MutableConfSt) SetInt8(name string, value int8) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).i8[name]
 	if !ok {
 		return false
@@ -427,6 +528,9 @@ func (m *MutableConfSt) SetInt8(name string, value int8) bool {
 }
 
 func (m *MutableConfSt) SetInt16(name string, value int16) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).i16[name]
 	if !ok {
 		return false
@@ -438,6 +542,9 @@ func (m *MutableConfSt) SetInt16(name string, value int16) bool {
 }
 
 func (m *MutableConfSt) SetInt32(name string, value int32) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).i32[name]
 	if !ok {
 		return false
@@ -449,6 +556,9 @@ func (m *MutableConfSt) SetInt32(name string, value int32) bool {
 }
 
 func (m *MutableConfSt) SetInt64(name string, value int64) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).i64[name]
 	if !ok {
 		return false
@@ -460,6 +570,9 @@ func (m *MutableConfSt) SetInt64(name string, value int64) bool {
 }
 
 func (m *MutableConfSt) SetString(name string, value string) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).s[name]
 	if !ok {
 		return false
@@ -471,6 +584,9 @@ func (m *MutableConfSt) SetString(name string, value string) bool {
 }
 
 func (m *MutableConfSt) SetUint(name string, value uint) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).ui[name]
 	if !ok {
 		return false
@@ -482,6 +598,9 @@ func (m *MutableConfSt) SetUint(name string, value uint) bool {
 }
 
 func (m *MutableConfSt) SetUint8(name string, value uint8) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).ui8[name]
 	if !ok {
 		return false
@@ -493,6 +612,9 @@ func (m *MutableConfSt) SetUint8(name string, value uint8) bool {
 }
 
 func (m *MutableConfSt) SetUint16(name string, value uint16) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).ui16[name]
 	if !ok {
 		return false
@@ -504,6 +626,9 @@ func (m *MutableConfSt) SetUint16(name string, value uint16) bool {
 }
 
 func (m *MutableConfSt) SetUint32(name string, value uint32) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).ui32[name]
 	if !ok {
 		return false
@@ -515,6 +640,9 @@ func (m *MutableConfSt) SetUint32(name string, value uint32) bool {
 }
 
 func (m *MutableConfSt) SetUint64(name string, value uint64) bool {
+	if !(*m).init {
+		return false
+	}
 	this, ok := (*m).ui64[name]
 	if !ok {
 		return false
@@ -527,6 +655,10 @@ func (m *MutableConfSt) SetUint64(name string, value uint64) bool {
 
 // print configuration
 func (m *MutableConfSt) Print() {
+	if !(*m).init {
+		fmt.Printf("{\"error\": \"MutableConfSt is not yet initialized!\"}\n")
+		return
+	}
 	c := fmt.Sprintf("{\n")
 	for k, v := range (*m).b {
 		c = fmt.Sprintf("%s  \"%s\": {\n", c, k)
