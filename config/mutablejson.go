@@ -696,8 +696,78 @@ func (m *MutableConfSt) SetUint64(name string, value uint64) bool {
 	return (*this).mutable
 }
 
+// get config item generically
+func (m *MutableConfSt) Get(key string) interface{} {
+	tp, ok := (*m).t[key]
+	if !ok {
+		return nil
+	}
+	handled := false
+	var this interface{}
+	if !handled && tp == "bool" {
+		this, ok = (*m).b[key]
+		handled = true
+	}
+	if !handled && tp == "float32" {
+		this, ok = (*m).f32[key]
+		handled = true
+	}
+	if !handled && tp == "float64" {
+		this, ok = (*m).f64[key]
+		handled = true
+	}
+	if !handled && tp == "int" {
+		this, ok = (*m).i[key]
+		handled = true
+	}
+	if !handled && tp == "int8" {
+		this, ok = (*m).i8[key]
+		handled = true
+	}
+	if !handled && tp == "int16" {
+		this, ok = (*m).i16[key]
+		handled = true
+	}
+	if !handled && tp == "int32" {
+		this, ok = (*m).i32[key]
+		handled = true
+	}
+	if !handled && tp == "int64" {
+		this, ok = (*m).i64[key]
+		handled = true
+	}
+	if !handled && tp == "string" {
+		this, ok = (*m).s[key]
+		handled = true
+	}
+	if !handled && tp == "uint" {
+		this, ok = (*m).ui[key]
+		handled = true
+	}
+	if !handled && tp == "uint8" {
+		this, ok = (*m).ui8[key]
+		handled = true
+	}
+	if !handled && tp == "uint16" {
+		this, ok = (*m).ui16[key]
+		handled = true
+	}
+	if !handled && tp == "uint32" {
+		this, ok = (*m).ui32[key]
+		handled = true
+	}
+	if !handled && tp == "uint64" {
+		this, ok = (*m).ui64[key]
+		handled = true
+	}
+	if !handled || !ok {
+		return nil
+	}
+	return this
+}
+
 // set config item dynamically
-func (m *MutableConfSt) SetConf(key, value string) bool {
+func (m *MutableConfSt) Set(key, value string) bool {
 	tp, ok := (*m).t[key]
 	if !ok {
 		return false
