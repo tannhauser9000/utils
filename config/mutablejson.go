@@ -702,68 +702,49 @@ func (m *MutableConfSt) Get(key string) interface{} {
 	if !ok {
 		return nil
 	}
-	handled := false
-	var this interface{}
-	if !handled && tp == "bool" {
-		this, ok = (*m).b[key]
-		handled = true
+	if tp == "bool" {
+		return m.GetBool(key)
 	}
-	if !handled && tp == "float32" {
-		this, ok = (*m).f32[key]
-		handled = true
+	if tp == "float32" {
+		return m.GetFloat32(key)
 	}
-	if !handled && tp == "float64" {
-		this, ok = (*m).f64[key]
-		handled = true
+	if tp == "float64" {
+		return m.GetFloat64(key)
 	}
-	if !handled && tp == "int" {
-		this, ok = (*m).i[key]
-		handled = true
+	if tp == "int" {
+		return m.GetInt(key)
 	}
-	if !handled && tp == "int8" {
-		this, ok = (*m).i8[key]
-		handled = true
+	if tp == "int8" {
+		return m.GetInt8(key)
 	}
-	if !handled && tp == "int16" {
-		this, ok = (*m).i16[key]
-		handled = true
+	if tp == "int16" {
+		return m.GetInt16(key)
 	}
-	if !handled && tp == "int32" {
-		this, ok = (*m).i32[key]
-		handled = true
+	if tp == "int32" {
+		return m.GetInt32(key)
 	}
-	if !handled && tp == "int64" {
-		this, ok = (*m).i64[key]
-		handled = true
+	if tp == "int64" {
+		return m.GetInt64(key)
 	}
-	if !handled && tp == "string" {
-		this, ok = (*m).s[key]
-		handled = true
+	if tp == "string" {
+		return m.GetString(key)
 	}
-	if !handled && tp == "uint" {
-		this, ok = (*m).ui[key]
-		handled = true
+	if tp == "uint" {
+		return m.GetUint(key)
 	}
-	if !handled && tp == "uint8" {
-		this, ok = (*m).ui8[key]
-		handled = true
+	if tp == "uint8" {
+		return m.GetUint8(key)
 	}
-	if !handled && tp == "uint16" {
-		this, ok = (*m).ui16[key]
-		handled = true
+	if tp == "uint16" {
+		return m.GetUint16(key)
 	}
-	if !handled && tp == "uint32" {
-		this, ok = (*m).ui32[key]
-		handled = true
+	if tp == "uint32" {
+		return m.GetUint32(key)
 	}
-	if !handled && tp == "uint64" {
-		this, ok = (*m).ui64[key]
-		handled = true
+	if tp == "uint64" {
+		return m.GetUint64(key)
 	}
-	if !handled || !ok {
-		return nil
-	}
-	return this
+	return nil
 }
 
 // set config item dynamically
