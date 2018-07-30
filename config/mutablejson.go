@@ -506,6 +506,7 @@ func (m *MutableConfSt) SetFloat32(name string, value float32) bool {
 
 func (m *MutableConfSt) SetFloat64(name string, value float64) bool {
 	if !(*m).init {
+		fmt.Printf("[SetFloat64] init: %v\n", (*m).init)
 		return false
 	}
 	(*m).lock.Lock()
@@ -770,7 +771,7 @@ func (m *MutableConfSt) Set(key, value string) bool {
 		f64, err = strconv.ParseFloat(value, 32)
 		handled = true
 	}
-	if !handled && tp == "float32" {
+	if !handled && tp == "float64" {
 		f64, err = strconv.ParseFloat(value, 64)
 		handled = true
 	}
