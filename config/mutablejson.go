@@ -141,7 +141,7 @@ func InitJSONMutableConf(path string, conf interface{}, mute *map[string]bool) (
 		ui32: make(map[string]*uint32Conf),  // map for uint32 value
 		ui64: make(map[string]*uint64Conf),  // map for uint64 value
 	}
-	(*st).lock, _ = lock.GetRWLock()
+	(*st).lock = lock.GetRWLock()
 	mutable, ok := false, false
 	(*st).lock.Lock()
 	defer (*st).lock.Unlock()
