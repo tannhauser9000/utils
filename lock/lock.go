@@ -210,3 +210,13 @@ func (rwLock *TimeoutRWLock) Lock() error {
 func (rwLock *TimeoutRWLock) Unlock() error {
 	return (*rwLock).wLock.Unlock()
 }
+
+// Unlockable check if lock  unlockable
+func (l *Lock) Unlockable() bool {
+	return (*l).unlockable
+}
+
+// Unlockable check if timeout lock  unlockable
+func (l *TimeoutLock) Unlockable() bool {
+	return (*l).unlockable
+}
