@@ -15,8 +15,7 @@ type Error string
 
 // Lock is for regular lock
 type Lock struct {
-	lock       *pool.IndexPool
-	unlockable bool
+	lock *pool.IndexPool
 }
 
 // RWLock is for regular read-write lock, read-preferring implementation
@@ -28,8 +27,7 @@ type RWLock struct {
 
 // TimeoutLock is for lock with timeout, avoid indefinitely waiting
 type TimeoutLock struct {
-	lock       *pool.TimeoutIndexPool
-	unlockable bool
+	lock *pool.TimeoutIndexPool
 }
 
 // TimeoutRWLock is for read-write lock with timeout, avoid indefinitely waiting, read-preferring implementation
@@ -47,9 +45,6 @@ const ErrTimeout = Error("Lock timeout")
 // ErrUnknown is for unknown situation
 const ErrUnknown = Error("Unknown situation when acquiring lock")
 
-// ErrDuplicatedUnlock is for duplicated unlock
-const ErrDuplicatedUnlock = Error("Duplicated unlock operation")
-
 // Error is for constant error
 func (e Error) Error() string {
 	return string(e)
@@ -60,23 +55,17 @@ func GetLock() *Lock {
 	l := &Lock{}
 	(*l).lock = &pool.IndexPool{}
 	(*l).lock.Init(1)
-	(*l).unlockable = false
 	return l
 }
 
 // Lock lock a regular lock
 func (l *Lock) Lock() {
 	(*l).lock.Get()
-	(*l).unlockable = true
 }
 
 // Unlock unlock a regular lock
 func (l *Lock) Unlock() error {
-	if !(*l).unlockable {
-		return ErrDuplicatedUnlock
-	}
 	(*l).lock.Free(0)
-	(*l).unlockable = false
 	return nil
 }
 
@@ -124,7 +113,6 @@ func GetTimeoutLock(timeout time.Duration) *TimeoutLock {
 	l := &TimeoutLock{}
 	(*l).lock = &pool.TimeoutIndexPool{}
 	(*l).lock.Init(1, timeout)
-	(*l).unlockable = false
 	return l
 }
 
@@ -137,25 +125,17 @@ func (l *TimeoutLock) Lock() error {
 	if err != nil && err == pool.ErrTimeout {
 		err = ErrTimeout
 	}
-	if err == nil {
-		(*l).unlockable = true
-	}
 	return err
 }
 
 // Unlock unlock a timeout lock
 func (l *TimeoutLock) Unlock() error {
-	if !(*l).unlockable {
-		return ErrDuplicatedUnlock
-	}
 	err := (*l).lock.Free(0)
 	if err != nil && err != pool.ErrFreeTimeout {
 		err = ErrUnknown
 	}
 	if err != nil {
 		err = ErrTimeout
-	} else {
-		(*l).unlockable = false
 	}
 	return err
 }
@@ -209,14 +189,4 @@ func (rwLock *TimeoutRWLock) Lock() error {
 // Unlock write unlock a read-write lock w/ timeout
 func (rwLock *TimeoutRWLock) Unlock() error {
 	return (*rwLock).wLock.Unlock()
-}
-
-// Unlockable check if lock  unlockable
-func (l *Lock) Unlockable() bool {
-	return (*l).unlockable
-}
-
-// Unlockable check if timeout lock  unlockable
-func (l *TimeoutLock) Unlockable() bool {
-	return (*l).unlockable
 }
