@@ -1,23 +1,23 @@
+package pool
+
 /*
 * author: tannhauser ruan
 * email: tannhauser.sphinx@gmail.com
 * summary: golang index pool via golang channel, for resource pool or lock
  */
-package pool
 
-import "fmt"
 import "time"
 
-// for contant error
+// Error for contant error
 type Error string
 
-// regular index pool
+// IndexPool regular index pool
 type IndexPool struct {
 	size  int
 	index chan int
 }
 
-// index pool with timeout
+// TimeoutIndexPool index pool with timeout
 type TimeoutIndexPool struct {
 	size    int
 	index   chan int
@@ -25,16 +25,22 @@ type TimeoutIndexPool struct {
 }
 
 // constant error for index pool
+
+// ErrTimeout for get index timeout
 const ErrTimeout = Error("Index timeout.")
+
+// ErrFreeTimeout for free index timeout
 const ErrFreeTimeout = Error("Index free timeout.")
+
+// ErrUnknown for unknown error
 const ErrUnknown = Error("Unknown situation when accessing index pool")
 
-// function for constant error
+// Error for constant error
 func (e Error) Error() string {
 	return string(e)
 }
 
-// initialize a regular index pool
+// Init initialize a regular index pool
 func (p *IndexPool) Init(size int) {
 	(*p).index = make(chan int, size)
 	for i := 0; i < size; i++ {
@@ -44,18 +50,18 @@ func (p *IndexPool) Init(size int) {
 	return
 }
 
-// get an index from a regular index pool
+// Get get an index from a regular index pool
 func (p *IndexPool) Get() int {
 	return <-(*p).index
 }
 
-// free an index to the regular index pool
+// Free free an index to the regular index pool
 func (p *IndexPool) Free(index int) {
 	(*p).index <- index
 	return
 }
 
-// initialize a index pool with timeout
+// Init initialize a index pool with timeout
 func (p *TimeoutIndexPool) Init(size int, timeout time.Duration) {
 	(*p).index = make(chan int, size)
 	for i := 0; i < size; i++ {
@@ -66,7 +72,7 @@ func (p *TimeoutIndexPool) Init(size int, timeout time.Duration) {
 	return
 }
 
-// get an index from a index pool with timeout
+// Get get an index from a index pool with timeout
 func (p *TimeoutIndexPool) Get() (int, error) {
 	index := 0
 	err := error(nil)
@@ -79,15 +85,13 @@ func (p *TimeoutIndexPool) Get() (int, error) {
 	return index, err
 }
 
-// free an index back to index pool wiith timeout
+// Free free an index back to index pool wiith timeout
 func (p *TimeoutIndexPool) Free(index int) error {
 	err := error(nil)
-	start := time.Now()
 	select {
 	case (*p).index <- index:
 		err = nil
 	case <-time.After((*p).timeout):
-		fmt.Printf("[Free] duration: %d\n", time.Since(start))
 		err = ErrFreeTimeout
 	}
 	return err
