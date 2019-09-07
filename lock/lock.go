@@ -42,6 +42,9 @@ type TimeoutRWLock struct {
 // ErrTimeout is for lock acquire timeout
 const ErrTimeout = Error("Lock timeout")
 
+// ErrDuplicatedUnlock is for Duplicated Unlock
+const ErrDuplicatedUnlock = Error("Duplicated Unlock")
+
 // ErrUnknown is for unknown situation
 const ErrUnknown = Error("Unknown situation when acquiring lock")
 
