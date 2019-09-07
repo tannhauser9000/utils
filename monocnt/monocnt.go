@@ -23,7 +23,7 @@ func InitCount(cntType string) *CntSt {
 		cnt:      uint32(0),
 		cnt_type: cntType,
 	}
-	(*this).lock, _ = lock.GetLock()
+	(*this).lock = lock.GetLock()
 	return this
 }
 
